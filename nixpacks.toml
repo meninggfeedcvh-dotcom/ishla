@@ -2,7 +2,11 @@
 nixPkgs = ["nodejs-20_x", "nodePackages.npm", "python311"]
 
 [phases.install]
-cmds = ["npm install", "pip install -r bot/requirements.txt"]
+cmds = [
+    "npm install",
+    "python -m venv /opt/venv",
+    "/opt/venv/bin/pip install -r bot/requirements.txt"
+]
 
 [start]
-cmd = "npm start"
+cmd = "PATH=/opt/venv/bin:$PATH npm start"
