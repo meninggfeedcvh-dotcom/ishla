@@ -14,7 +14,7 @@ load_dotenv()
 # --- Configuration ---
 TOKEN = os.getenv("BOT_TOKEN")
 DATABASE = "database.db"
-ADMIN_ID = os.getenv("ADMIN_ID") # Optional for admin broadcasts
+ADMIN_IDS = (os.getenv("ADMIN_IDS") or "").split(",") 
 DB_PATH = os.path.abspath(DATABASE)
 
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +23,7 @@ dp = Dispatcher()
 
 # --- Admin Check ---
 def is_admin(user_id: int):
-    return str(user_id) == str(ADMIN_ID)
+    return str(user_id) in [id.strip() for id in ADMIN_IDS if id.strip()]
 
 # --- Database Helpers ---
 def get_db():
@@ -63,7 +63,7 @@ async def check_subscription(user_id: int):
 
 def get_join_keyboard():
     kb = InlineKeyboardBuilder()
-    kb.button(text="Kanalga a'zo bo'lish 📢", url="https://t.me/starsbazachannel")
+    kb.button(text="Kanalga a'zo bo'lish 📢", url="https://t.me/devel0per_junior")
     kb.button(text="Tekshirish ✅", callback_data="check_sub")
     kb.adjust(1)
     return kb.as_markup()
@@ -186,7 +186,9 @@ async def cb_promo(callback: types.CallbackQuery):
 # --- Admin Commands ---
 @dp.message(Command("admin"))
 async def admin_panel(message: types.Message):
-    if not is_admin(message.from_user.id): return
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Sizda ushbu komanda uchun ruxsat yo'q.")
+        return
     
     conn = get_db()
     cursor = conn.cursor()
@@ -214,7 +216,9 @@ async def admin_panel(message: types.Message):
 
 @dp.message(Command("broadcast"))
 async def admin_broadcast(message: types.Message):
-    if not is_admin(message.from_user.id): return
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Sizda ushbu komanda uchun ruxsat yo'q.")
+        return
     
     msg_parts = message.text.split(maxsplit=1)
     if len(msg_parts) < 2:
@@ -242,7 +246,9 @@ async def admin_broadcast(message: types.Message):
 
 @dp.message(Command("addbalance"))
 async def admin_add_balance(message: types.Message):
-    if not is_admin(message.from_user.id): return
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Sizda ushbu komanda uchun ruxsat yo'q.")
+        return
     
     args = message.text.split()
     if len(args) < 3:
@@ -268,7 +274,9 @@ async def admin_add_balance(message: types.Message):
 
 @dp.message(Command("user"))
 async def admin_user_info(message: types.Message):
-    if not is_admin(message.from_user.id): return
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Sizda ushbu komanda uchun ruxsat yo'q.")
+        return
     
     args = message.text.split()
     if len(args) < 2:
