@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 const { Pool } = require('pg');
@@ -19,6 +20,60 @@ if (isPostgres) {
         const sqlite3 = require('sqlite3').verbose();
         db = new sqlite3.Database('database.db');
         console.log('Connected to SQLite database');
+        
+        // --- Database Schema Extensions ---
+        db.serialize(() => {
+            db.run(`CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                username TEXT,
+                balance INTEGER DEFAULT 0,
+                total_orders INTEGER DEFAULT 0,
+                total_stars INTEGER DEFAULT 0,
+                joined_at DATETIME,
+                referred_by TEXT,
+                stars_balance INTEGER DEFAULT 0
+            )`);
+            
+            db.all("PRAGMA table_info(users)", (err, rows) => {
+                if (err) return;
+                const cols = rows.map(r => r.name);
+                if (!cols.includes('joined_at')) db.run("ALTER TABLE users ADD COLUMN joined_at DATETIME");
+                if (!cols.includes('referred_by')) db.run("ALTER TABLE users ADD COLUMN referred_by TEXT");
+                if (!cols.includes('stars_balance')) db.run("ALTER TABLE users ADD COLUMN stars_balance INTEGER DEFAULT 0");
+            });
+
+            db.run(`CREATE TABLE IF NOT EXISTS promo_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT UNIQUE,
+                reward INTEGER,
+                max_uses INTEGER,
+                current_uses INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`);
+
+            db.run(`CREATE TABLE IF NOT EXISTS promo_usage (
+                user_id TEXT,
+                promo_id INTEGER,
+                used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, promo_id)
+            )`);
+
+            db.run(`CREATE TABLE IF NOT EXISTS withdrawals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT,
+                amount INTEGER,
+                status TEXT DEFAULT 'pending',
+                wallet_address TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`);
+
+            db.run(`CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )`);
+
+            db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('required_channel', '@starsbazachannel')`);
+        });
     } catch (e) {
         console.error('SQLite initialization failed:', e.message);
     }
@@ -109,6 +164,7 @@ app.get('/api/user', (req, res) => {
         if (err || !row) {
             return res.json({
                 balance: 0,
+                stars_balance: 0,
                 username: 'Noma\'lum',
                 id: userId,
                 currency: 'so\'m',
@@ -119,6 +175,7 @@ app.get('/api/user', (req, res) => {
         }
         res.json({
             balance: row.balance,
+            stars_balance: row.stars_balance || 0,
             username: `@${row.username}`,
             id: row.id,
             currency: 'so\'m',
@@ -129,6 +186,36 @@ app.get('/api/user', (req, res) => {
                 referrals: row.ref_count
             },
             api_token: `sk-stars-${row.id}`
+        });
+    });
+});
+
+// --- Bot Feature Endpoints ---
+app.post('/api/withdraw', (req, res) => {
+    const { user_id, amount, wallet } = req.body;
+    db.get("SELECT stars_balance FROM users WHERE id = ?", [user_id], (err, row) => {
+        if (err || !row || row.stars_balance < amount || amount < 50) 
+            return res.status(400).json({ error: "Xatolik yoki yetarli emas" });
+
+        db.run("UPDATE users SET stars_balance = stars_balance - ? WHERE id = ?", [amount, user_id], () => {
+            db.run("INSERT INTO withdrawals (user_id, amount, wallet_address) VALUES (?, ?, ?)", [user_id, amount, wallet], () => {
+                res.json({ success: true });
+            });
+        });
+    });
+});
+
+app.post('/api/promo/redeem', (req, res) => {
+    const { user_id, code } = req.body;
+    db.get("SELECT * FROM promo_codes WHERE code = ?", [code], (err, promo) => {
+        if (!promo || promo.current_uses >= promo.max_uses) return res.status(400).json({ error: "Promo xato yoki tugagan" });
+        db.get("SELECT * FROM promo_usage WHERE user_id = ? AND promo_id = ?", [user_id, promo.id], (err, used) => {
+            if (used) return res.status(400).json({ error: "Avval ishlatilgan" });
+            db.run("UPDATE users SET stars_balance = stars_balance + ? WHERE id = ?", [promo.reward, user_id], () => {
+                db.run("UPDATE promo_codes SET current_uses = current_uses + 1 WHERE id = ?", [promo.id]);
+                db.run("INSERT INTO promo_usage (user_id, promo_id) VALUES (?, ?)", [user_id, promo.id]);
+                res.json({ success: true, reward: promo.reward });
+            });
         });
     });
 });
@@ -191,8 +278,8 @@ app.get('/health', (req, res) => {
 
 app.use(express.static(path.join(__dirname, '/')));
 
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Server is listening on port ${port} and address 0.0.0.0`);
+app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
 });
 
 // --- Graceful Shutdown ---
