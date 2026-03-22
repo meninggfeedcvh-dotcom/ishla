@@ -21,6 +21,10 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+# --- Admin Check ---
+def is_admin(user_id: int):
+    return str(user_id) == str(ADMIN_ID)
+
 # --- Database Helpers ---
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -179,8 +183,119 @@ async def cb_promo(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.answer("🎁 Promo kodni yuboring:")
 
-@dp.message()
-async def promo_handler(message: types.Message):
+# --- Admin Commands ---
+@dp.message(Command("admin"))
+async def admin_panel(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT SUM(total_stars) FROM users")
+    total_stars_val = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT COUNT(*) FROM promo_codes")
+    total_promos = cursor.fetchone()[0]
+    conn.close()
+
+    text = (
+        "<b>👨‍💻 Admin Paneli</b>\n\n"
+        f"👥 Jami foydalanuvchilar: <b>{total_users}</b>\n"
+        f"💎 Jami sotilgan Stars: <b>{total_stars_val}</b>\n"
+        f"🎁 Faol promo kodlar: <b>{total_promos}</b>\n\n"
+        "<b>Buyruqlar:</b>\n"
+        "📣 /broadcast [xabar] - Hammuaga jo'natish\n"
+        "💰 /addbalance [id] [summa] - Balans qo'shish\n"
+        "👤 /user [id] - Foydalanuvchi ma'lumoti"
+    )
+    await message.answer(text, parse_mode="HTML")
+
+@dp.message(Command("broadcast"))
+async def admin_broadcast(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    
+    msg_parts = message.text.split(maxsplit=1)
+    if len(msg_parts) < 2:
+        await message.answer("❌ Xabar matnini kiriting: `/broadcast Salom hammuaga` (Markdown emas, shunchaki matn)", parse_mode="Markdown")
+        return
+    msg_text = msg_parts[1]
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users")
+    users = cursor.fetchall()
+    conn.close()
+
+    count = 0
+    await message.answer(f"⏳ {len(users)} ta foydalanuvchiga yuborish boshlandi...")
+    
+    for user in users:
+        try:
+            await bot.send_message(user['id'], msg_text)
+            count += 1
+            await asyncio.sleep(0.05) # Avoid flood
+        except: pass
+    
+    await message.answer(f"✅ Xabar {count} ta foydalanuvchiga muvaffaqiyatli yuborildi.")
+
+@dp.message(Command("addbalance"))
+async def admin_add_balance(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    
+    args = message.text.split()
+    if len(args) < 3:
+        await message.answer("❌ Format: `/addbalance [user_id] [amount]`", parse_mode="Markdown")
+        return
+        
+    target_id, amount = args[1], args[2]
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET balance = balance + ? WHERE id = ?", (amount, target_id))
+        if cursor.rowcount > 0:
+            conn.commit()
+            await message.answer(f"✅ Foydalanuvchi {target_id} balansiga {amount} so'm qo'shildi.")
+            try:
+                await bot.send_message(target_id, f"💰 Hisobingiz {amount} so'mga to'ldirildi!")
+            except: pass
+        else:
+            await message.answer("❌ Foydalanuvchi topilmadi.")
+        conn.close()
+    except Exception as e:
+        await message.answer(f"❌ Xatolik: {e}")
+
+@dp.message(Command("user"))
+async def admin_user_info(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    
+    args = message.text.split()
+    if len(args) < 2:
+        await message.answer("❌ Format: `/user [user_id]`", parse_mode="Markdown")
+        return
+        
+    target_id = args[1]
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (target_id,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        text = (
+            f"👤 <b>Foydalanuvchi:</b> @{user['username']}\n"
+            f"🆔 ID: <code>{user['id']}</code>\n"
+            f"💰 Balans: {user['balance']} so'm\n"
+            f"💎 Stars Balans: {user['stars_balance']}\n"
+            f"📦 Buyurtmalar: {user['total_orders']}\n"
+            f"📅 Qo'shilgan: {user['joined_at']}"
+        )
+        await message.answer(text, parse_mode="HTML")
+    else:
+        await message.answer("❌ Foydalanuvchi topilmadi.")
+
+# --- Promo Handling ---
     # If the user sends a potential promo code (not a command)
     if message.text and not message.text.startswith('/'):
         code = message.text.strip()
