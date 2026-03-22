@@ -552,7 +552,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const method = methodBtn ? methodBtn.dataset.method : 'card';
             
             if (method !== 'balance') {
-                return showToast('Hozircha faqat shaxsiy balans orqali to\'lash mumkin! 💳', 'info');
+                openModal('payment');
+                return;
             }
 
             const amountLabel = isStars ? starsAmount.value + ' stars' : document.querySelector('#premium-duration .amount-btn.active').textContent;
@@ -616,17 +617,60 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ref-modal-copy')?.addEventListener('click', () => {
         const input = document.getElementById('ref-modal-input');
         if (input) {
-            input.select();
-            navigator.clipboard.writeText(input.value);
-            showToast('Havola nusxalandi! ✅');
+            const text = input.value;
+            // Use Telegram WebApp clipboard if available
+            if (window.Telegram?.WebApp?.readTextFromClipboard) {
+                // Telegram WebApp doesn't have writeText, use fallback
+                try {
+                    input.select();
+                    input.setSelectionRange(0, 99999);
+                    document.execCommand('copy');
+                    showToast('Havola nusxalandi! ✅');
+                } catch (e) {
+                    // Final fallback: create temporary textarea
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-9999px';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showToast('Havola nusxalandi! ✅');
+                }
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Havola nusxalandi! ✅');
+                }).catch(() => {
+                    // Fallback
+                    input.select();
+                    document.execCommand('copy');
+                    showToast('Havola nusxalandi! ✅');
+                });
+            } else {
+                // Legacy fallback
+                input.select();
+                input.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                showToast('Havola nusxalandi! ✅');
+            }
         }
     });
 
     document.getElementById('ref-modal-share')?.addEventListener('click', () => {
         const refLink = document.getElementById('ref-modal-input')?.value;
         if (refLink) {
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent('Yulduzlar va Premium obuna uchun eng arzon bot!')}`;
-            window.open(shareUrl, '_blank');
+            const shareText = encodeURIComponent('Yulduzlar va Premium obuna uchun eng arzon bot!');
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${shareText}`;
+            
+            // Use Telegram's native link opener if available
+            if (window.Telegram?.WebApp?.openTelegramLink) {
+                window.Telegram.WebApp.openTelegramLink(shareUrl);
+            } else if (window.Telegram?.WebApp?.openLink) {
+                window.Telegram.WebApp.openLink(shareUrl);
+            } else {
+                window.open(shareUrl, '_blank');
+            }
         }
     });
 
