@@ -341,9 +341,16 @@ app.listen(port, () => {
 // --- Graceful Shutdown ---
 process.on('SIGINT', () => {
     console.log('Shutting down server...');
-    db.close((err) => {
-        if (err) console.error('Error closing database:', err.message);
-        else console.log('Database connection closed.');
-        process.exit(0);
-    });
+    if (isPostgres) {
+        db.end(() => {
+            console.log('Postgres connection pool closed.');
+            process.exit(0);
+        });
+    } else {
+        db.close((err) => {
+            if (err) console.error('Error closing SQLite database:', err.message);
+            else console.log('SQLite database connection closed.');
+            process.exit(0);
+        });
+    }
 });
