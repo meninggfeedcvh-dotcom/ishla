@@ -2,15 +2,29 @@ import asyncio
 import logging
 import sqlite3
 import sys
+import os
+import re
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.types import WebAppInfo
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Multi-DB Support
+is_postgres = "DATABASE_URL" in os.environ
 
-import os
+if is_postgres:
+    import psycopg2
+    try:
+        conn_params = os.getenv("DATABASE_URL")
+        # Simple conn wrapper for postgres/sqlite parity
+        def get_conn():
+            return psycopg2.connect(conn_params, sslmode='require')
+    except Exception as e:
+        print(f"Postgres connection error: {e}")
+else:
+    def get_conn():
+        return sqlite3.connect(DB_PATH)
+
 # --- Configuration ---
 TOKEN = os.getenv("BOT_TOKEN", "8622545801:AAEZfQjdqtxzMpVnTfNhJr6pWBDIWlKRu-g")
 ADMIN_IDS = [int(i) for i in os.getenv("ADMIN_IDS", "8534196478").split(",")]
@@ -161,7 +175,7 @@ async def cmd_start(message: types.Message):
         if referrer_id == user_id: referrer_id = None # Can't refer self
     
     # Save user to DB
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
     existing_user = cursor.fetchone()
