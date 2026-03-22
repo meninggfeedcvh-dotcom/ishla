@@ -49,8 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (avatarEl) {
                 avatarEl.textContent = tgUser.first_name.charAt(0).toUpperCase();
             }
+        } else {
+            console.log("tgUser data is not available");
         }
+    } else {
+        console.log("Telegram WebApp object not found");
     }
+    console.log("Current userId for fetch:", userId);
 
     async function init() {
         showLoader();
@@ -183,8 +188,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateUI() {
         if (!userData) return;
+        
+        // Update balance
         const formatted = new Intl.NumberFormat('uz-UZ').format(userData.balance);
-        balanceElement.textContent = `${formatted} ${userData.currency || 'so\'m'}`;
+        if (balanceElement) balanceElement.textContent = `${formatted} ${userData.currency || 'so\'m'}`;
+        if (document.getElementById('modal-balance')) document.getElementById('modal-balance').textContent = `${formatted} so'm`;
+
+        // Update Identity (Fallback from Server)
+        const nameEl = document.getElementById('profile-name');
+        const userEl = document.getElementById('profile-username');
+        const idEl = document.getElementById('profile-id');
+        const avatarEl = document.getElementById('profile-avatar-letter');
+
+        if (nameEl) nameEl.textContent = userData.name || userData.username || 'Foydalanuvchi';
+        if (userEl) userEl.textContent = userData.username ? (userData.username.startsWith('@') ? userData.username : `@${userData.username}`) : '@username';
+        if (idEl) idEl.textContent = `ID: ${userData.id}`;
+
+        if (userData.avatar_letter && avatarEl && !avatarEl.querySelector('img')) {
+            avatarEl.textContent = userData.avatar_letter;
+        }
     }
 
     function updateReferralLink() {
@@ -384,9 +406,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (show && leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Yuklanmoqda...</p>';
         try {
             const response = await fetch(`/api/top10?period=${period}`);
+            if (!response.ok) throw new Error('Server error');
             const data = await response.json();
+            if (!Array.isArray(data)) throw new Error('Invalid data');
+            if (data.length === 0) {
+                if (leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Hozircha ma\'lumot yo\'q</p>';
+                return;
+            }
             renderLeaderboard(data);
         } catch (error) {
+            console.error('Leaderboard fetch error:', error);
             if (show && leaderboardList) leaderboardList.innerHTML = '<p style="color:red; text-align:center;">Xatolik!</p>';
         }
     }
