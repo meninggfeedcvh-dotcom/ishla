@@ -114,6 +114,50 @@ if (isPostgres) {
     }
 }
 
+// --- PostgreSQL Initialization (Ensure tables and services exist) ---
+if (isPostgres) {
+    const setupPostgres = async () => {
+        try {
+            await query.run(`CREATE TABLE IF NOT EXISTS services (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                type TEXT,
+                val INTEGER,
+                price INTEGER
+            )`, []);
+            
+            const row = await new Promise((resolve, reject) => {
+                query.get("SELECT COUNT(*) as count FROM services", [], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            });
+
+            if (row && parseInt(row.count) === 0) {
+                console.log('Populating PostgreSQL services...');
+                const initial_services = [
+                    ["💎 50 Stars", "stars", 50, 10500],
+                    ["💎 100 Stars", "stars", 100, 21000],
+                    ["💎 200 Stars", "stars", 200, 42000],
+                    ["💎 400 Stars", "stars", 400, 84000],
+                    ["💎 1000 Stars", "stars", 1000, 210000],
+                    ["👑 Premium 3 oy", "premium", 3, 190000],
+                    ["👑 Premium 6 oy", "premium", 6, 350000],
+                    ["👑 Premium 12 oy", "premium", 12, 600000]
+                ];
+                for (const s of initial_services) {
+                    await new Promise((resolve) => {
+                        query.run("INSERT INTO services (name, type, val, price) VALUES (?, ?, ?, ?)", s, resolve);
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('PostgreSQL setup error:', err);
+        }
+    };
+    setupPostgres();
+}
+
 // Wrapper to match SQLite/Postgres query styles
 const query = {
     get: (sql, params, cb) => {
