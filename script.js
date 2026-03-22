@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Selectors ---
     const loader = document.getElementById('app-loader');
+    const toastContainer = document.getElementById('toast-container');
     const balanceElement = document.getElementById('balance-amount');
     const themeToggle = document.getElementById('theme-toggle');
     
@@ -39,6 +40,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLoader() { if (loader) loader.classList.remove('hidden'); }
     function hideLoader() { if (loader) loader.classList.add('hidden'); }
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+        toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+        toastContainer.appendChild(toast);
+        
+        // Haptic Feedback
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
+        }
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px) scale(0.9)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 
     // --- API Calls ---
     async function fetchUserData() {
@@ -117,7 +138,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openModal(key) {
         if (!modals[key]) return;
+        
+        // Haptic Feedback
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+        }
+
         modals[key].classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+        
         if (key === 'history') loadHistory();
         if (key === 'profile') renderProfileData();
         if (key === 'referral') renderReferralData();
@@ -128,7 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeModal(key) {
         if (!modals[key]) return;
-        modals[key].classList.remove('active');
+        modals[key].style.opacity = '0';
+        setTimeout(() => {
+            modals[key].classList.remove('active');
+            modals[key].style.opacity = '';
+            document.body.style.overflow = '';
+        }, 300);
     }
 
     Object.keys(navBtns).forEach(key => {
@@ -217,16 +251,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('stat-orders')) document.getElementById('stat-orders').textContent = userData.stats?.orders || 0;
         if (document.getElementById('stat-stars')) document.getElementById('stat-stars').textContent = userData.stats?.stars || 0;
         if (document.getElementById('stat-referrals')) document.getElementById('stat-referrals').textContent = userData.stats?.referrals || 0;
+        
+        // Stars balance display (new)
+        if (document.getElementById('stat-stars')) document.getElementById('stat-stars').textContent = userData.stars_balance || 0;
+        
         if (document.getElementById('api-token')) document.getElementById('api-token').value = userData.api_token || '---';
 
-        // Refill button logic
-        const refillBtn = document.querySelector('.refill-btn');
-        if (refillBtn) {
-            refillBtn.onclick = () => {
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.close(); 
-                } else {
-                    window.location.href = "https://t.me/starsbazatest_bot";
+        // Withdrawal shortcut (new)
+        const statsBox = document.querySelectorAll('.stat-box')[1]; // Stars box
+        if (statsBox) {
+            statsBox.style.cursor = 'pointer';
+            statsBox.onclick = () => {
+                const amount = prompt("Yechish uchun Stars miqdorini kiriting (min 50):", "50");
+                if (amount && parseInt(amount) >= 50) {
+                    const wallet = prompt("Karta raqami yoki Telegram username:");
+                    if (wallet) handleWithdraw(amount, wallet);
                 }
             };
         }
@@ -360,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const method = methodBtn ? methodBtn.dataset.method : 'card';
             
             if (method !== 'balance') {
-                return alert('Hozircha faqat shaxsiy balans orqali to\'lash mumkin! 💳');
+                return showToast('Hozircha faqat shaxsiy balans orqali to\'lash mumkin! 💳', 'info');
             }
 
             const amountLabel = isStars ? starsAmount.value + ' stars' : document.querySelector('#premium-duration .amount-btn.active').textContent;
@@ -374,10 +413,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 price: priceVal
             };
 
-            if (!payload.target_user) return alert('Username kiriting!');
-            if (isStars && (!payload.amount || parseInt(payload.amount) <= 0)) return alert('Stars miqdorini kiriting!');
-            if (!userId) return alert('Avval botga start bosing!');
-            if (userData && userData.balance < payload.price) return alert('Mablag\'ingiz yetarli emas! ❌');
+            if (!payload.target_user) return showToast('Username kiriting!', 'error');
+            if (isStars && (!payload.amount || parseInt(payload.amount) <= 0)) return showToast('Stars miqdorini kiriting!', 'error');
+            if (!userId) return showToast('Avval botga start bosing!', 'error');
+            if (userData && userData.balance < payload.price) return showToast('Mablag\'ingiz yetarli emas! ❌', 'error');
 
             try {
                 const response = await fetch('/api/purchase', {
@@ -387,13 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('Buyurtma qabul qilindi! ✅');
+                    showToast('Buyurtma qabul qilindi! ✅');
                     closeModal(modal);
                     fetchUserData();
                 } else {
-                    alert('Xatolik: ' + result.error);
+                    showToast('Xatolik: ' + result.error, 'error');
                 }
-            } catch (error) { alert('Tarmoq xatoligi!'); }
+            } catch (error) { showToast('Tarmoq xatoligi!', 'error'); }
         });
     });
 
@@ -417,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) {
             input.select();
             navigator.clipboard.writeText(input.value);
-            alert('Havola nusxalandi! ✅');
+            showToast('Havola nusxalandi! ✅');
         }
     });
 
@@ -428,6 +467,24 @@ document.addEventListener('DOMContentLoaded', () => {
             window.open(shareUrl, '_blank');
         }
     });
+
+    async function handleWithdraw(amount, wallet) {
+        // Haptic Feedback
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+
+        try {
+            const res = await fetch('/api/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, amount, wallet })
+            });
+            const data = await res.json();
+            if (data.success) { showToast('Sorov yuborildi! ✅'); fetchUserData(); }
+            else { showToast(data.error, 'error'); }
+        } catch (e) { showToast('Xatolik!', 'error'); }
+    }
 
     // Start everything
     init();
