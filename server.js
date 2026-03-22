@@ -373,6 +373,15 @@ app.post('/api/purchase', (req, res) => {
     });
 });
 
+app.get('/api/debug', (req, res) => {
+    res.json({
+        database: isPostgres ? 'PostgreSQL' : 'SQLite',
+        has_db_url: process.env.DATABASE_URL ? 'Yes (HIDDEN)' : 'No',
+        port: port,
+        userId: req.query.user_id || 'n/a'
+    });
+});
+
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
