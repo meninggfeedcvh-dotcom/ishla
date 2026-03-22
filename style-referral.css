@@ -1,0 +1,122 @@
+.referral-content {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.referral-icon-top {
+    font-size: 32px;
+    margin-bottom: 10px;
+    color: var(--accent-purple);
+}
+
+.referral-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    display: block;
+}
+
+.referral-link-container {
+    background: var(--input-bg);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.referral-link-container i {
+    color: var(--text-secondary);
+}
+
+.referral-link-input {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-mini-btn {
+    background: #ff9800; /* Orange 'Nusxa' button */
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.copy-mini-btn:active {
+    transform: scale(0.9);
+}
+
+.referral-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.ref-stat-box {
+    background: var(--input-bg);
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border: 1px solid var(--border-muted);
+}
+
+.ref-stat-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4fc3f7; /* Cyan blue text for numbers */
+}
+
+.ref-stat-lbl {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.share-btn {
+    background: #0088cc;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.share-btn:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+}
+
+@media (max-width: 360px) {
+    .referral-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cleanup unused light theme specific overrides */

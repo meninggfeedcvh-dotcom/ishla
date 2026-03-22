@@ -1,0 +1,67 @@
+.history-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.history-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.history-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-badge {
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-accepted {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-rejected {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.history-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 12px;
+    color: #888;
+}
+
+.history-date {
+    grid-column: span 2;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #555;
+}
+
+.reject-reason {
+    grid-column: span 2;
+    background: rgba(220, 53, 69, 0.05);
+    padding: 8px;
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #dc3545;
+}

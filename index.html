@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STARS BAZA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Modular Styles -->
+    <link rel="stylesheet" href="css/style-main.css">
+    <link rel="stylesheet" href="css/style-loader.css">
+    <link rel="stylesheet" href="css/style-modal.css">
+    <link rel="stylesheet" href="css/style-leaderboard.css">
+    <link rel="stylesheet" href="css/style-profile.css">
+    <link rel="stylesheet" href="css/style-history.css">
+    <link rel="stylesheet" href="css/style-purchase.css">
+    <link rel="stylesheet" href="css/style-referral.css">
+</head>
+<body class="dark-theme">
+    <!-- Beautiful Spinner -->
+    <div id="app-loader" class="loader-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <i class="fas fa-shopping-cart logo-icon"></i>
+                <h1 class="logo-text">STARS BAZA</h1>
+            </div>
+            <div class="header-actions">
+                <button id="theme-toggle" class="action-btn" style="background:none; border:none; color:var(--header-text); font-size:18px;">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="balance-card">
+                    <i class="fas fa-coins" style="color:#ffd700;"></i>
+                    <span id="balance-amount">0 so'm</span>
+                </div>
+                <div class="more-menu">
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="cards-grid">
+                <div class="menu-card stars-card">
+                    <div class="card-icon"><i class="fas fa-star" style="color:#ffd700; font-size:32px;"></i></div>
+                    <div class="card-info"><h3>Stars olish</h3><p>Tezkor va sifatli</p></div>
+                </div>
+                <div class="menu-card premium-card">
+                    <div class="card-icon"><i class="fas fa-crown" style="color:#ff00ff; font-size:32px;"></i></div>
+                    <div class="card-info"><h3>Premium olish</h3><p>Tezkor va ishonchli</p></div>
+                </div>
+            </div>
+
+            <div class="banner-card offers-banner">
+                <div class="banner-icon"><i class="fas fa-users" style="font-size:24px;"></i></div>
+                <div class="banner-text"><h3>Takliflar</h3><p>Do'stlarni taklif qiling</p></div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item" id="nav-history">
+                <i class="fas fa-history"></i>
+                <span>Tarix</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-top10">
+                <i class="fas fa-trophy"></i>
+                <span>Top 10</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-profile">
+                <i class="fas fa-user-circle"></i>
+                <span>Profil</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-history"></i><h2>Mening tarixim</h2></div>
+                <button class="close-modal" id="close-history"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="history-list" class="history-list">
+                <!-- History items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 10 Modal -->
+    <div id="top10-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-trophy"></i><h2>Top 10 foydalanuvchi</h2></div>
+                <button class="close-modal" id="close-top10"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-tabs">
+                <button class="tab-btn" data-period="daily">Kunlik</button>
+                <button class="tab-btn active" data-period="weekly">Haftalik</button>
+                <button class="tab-btn" data-period="monthly">Oylik</button>
+                <button class="tab-btn" data-period="all">Umumiy</button>
+            </div>
+            <p class="modal-subtitle">Eng ko'p buyurtma qilgan foydalanuvchilar</p>
+            <div id="leaderboard-list" class="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content profile-content">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-user"></i><h2>Shaxsiy kabinet</h2></div>
+                <button class="close-modal" id="close-profile"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="user-profile-info">
+                <div class="profile-avatar" id="profile-avatar-letter">?</div>
+                <div class="profile-text">
+                    <h3 id="profile-name">Foydalanuvchi</h3>
+                    <p id="profile-username">@username</p>
+                    <span id="profile-id">ID: 0000000000</span>
+                </div>
+            </div>
+            <div class="balance-section">
+                <div class="balance-info-row">
+                    <div class="wallet-icon-container"><i class="fas fa-wallet"></i></div>
+                    <div><p class="balance-label">Shaxsiy balans</p><p class="balance-value" id="modal-balance">0 so'm</p></div>
+                    <button class="refill-btn"><i class="fas fa-plus"></i> To'ldirish</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><i class="fas fa-shopping-basket"></i><span class="stat-value" id="stat-orders">0</span><span class="stat-label">Buyurtmalar</span></div>
+                <div class="stat-box"><i class="fas fa-star"></i><span class="stat-value" id="stat-stars">0</span><span class="stat-label">Sotib olingan stars</span></div>
+                <div class="stat-box"><i class="fas fa-users"></i><span class="stat-value" id="stat-referrals">0</span><span class="stat-label">Referallar</span></div>
+            </div>
+            <div class="api-panel">
+                <div class="api-header"><i class="fas fa-code"></i><h3>API Panel</h3></div>
+                <p class="api-description">API - faqat dasturchilar uchun. Avtomatik buyurtmalar yaratish mumkin.</p>
+                <div class="api-input-group">
+                    <input type="password" id="api-token" readonly>
+                    <div class="api-actions">
+                        <button class="api-btn" id="toggle-token"><i class="fas fa-eye"></i></button>
+                        <button class="api-btn"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stars Olish Modal -->
+    <div id="stars-modal" class="modal-overlay purchase-modal">
+        <div class="modal-content">
+            <div class="purchase-header">
+                <div class="modal-title"><i class="fas fa-star" style="color:#ffd700"></i><h2>Stars olish</h2></div>
+                <button class="close-modal" id="close-stars"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="purchase-body">
+                <div class="input-group">
+                    <i class="fas fa-at"></i>
+                    <input type="text" id="stars-username" placeholder="Username (masalan: usernam)">
+                    <button class="self-btn" id="stars-self">O'zimga</button>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-coins" style="color:#ffd700"></i>
+                    <input type="number" id="stars-amount" value="50">
+                </div>
+                <div class="quick-amounts" id="stars-quick">
+                    <button class="amount-btn active" data-val="50">50</button>
+                    <button class="amount-btn" data-val="100">100</button>
+                    <button class="amount-btn" data-val="200">200</button>
+                    <button class="amount-btn" data-val="400">400</button>
+                    <button class="amount-btn" data-val="1000">1000</button>
+                </div>
+                <p style="font-size:12px; color:#888; margin-bottom:10px;">To'lov usulini tanlang:</p>
+                <div class="payment-methods">
+                    <button class="method-btn active" data-method="card"><i class="fas fa-credit-card"></i> Bank kartasi</button>
+                    <button class="method-btn" data-method="balance"><i class="fas fa-wallet"></i> Shaxsiy balans</button>
+                </div>
+                <div class="total-display" id="stars-display-container">
+                    <i class="fas fa-calculator"></i> Jami: <span id="stars-total">10 500</span> so'm
+                </div>
+                <button class="pay-btn"><i class="fas fa-credit-card"></i> To'lov sahifasiga o'tish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Olish Modal -->
+    <div id="premium-modal" class="modal-overlay purchase-modal">
+        <div class="modal-content">
+            <div class="purchase-header">
+                <div class="modal-title"><i class="fas fa-crown" style="color:#ff00ff"></i><h2>Premium olish</h2></div>
+                <button class="close-modal" id="close-premium"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="purchase-body">
+                <div class="input-group">
+                    <i class="fas fa-at"></i>
+                    <input type="text" id="premium-username" placeholder="Username (masalan: usernam)">
+                    <button class="self-btn" id="premium-self">O'zimga</button>
+                </div>
+                <p style="font-size:12px; color:#888; margin-bottom:10px;">Obuna muddatini tanlang:</p>
+                <div class="quick-amounts" id="premium-duration">
+                    <button class="amount-btn active" data-val="3">3 oy</button>
+                    <button class="amount-btn" data-val="6">6 oy</button>
+                    <button class="amount-btn" data-val="12">12 oy</button>
+                </div>
+                <p style="font-size:12px; color:#888; margin-bottom:10px; margin-top:20px;">To'lov usulini tanlang:</p>
+                <div class="payment-methods">
+                    <button class="method-btn active" data-method="card"><i class="fas fa-credit-card"></i> Bank kartasi</button>
+                    <button class="method-btn" data-method="balance"><i class="fas fa-wallet"></i> Shaxsiy balans</button>
+                </div>
+                <div class="total-display" id="premium-display-container">
+                    <i class="fas fa-calculator"></i> Jami: <span id="premium-total">190 000</span> so'm
+                </div>
+                <button class="pay-btn"><i class="fas fa-credit-card"></i> To'lov sahifasiga o'tish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Modal -->
+    <div id="referral-modal" class="modal-overlay">
+        <div class="modal-content referral-content">
+            <div class="modal-header" style="margin-bottom: 10px;">
+                <button class="close-modal" id="close-referral" style="background: rgba(255, 255, 255, 0.1); color: white;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <p class="referral-label">Sizning referal havola:</p>
+            
+            <div class="referral-link-container">
+                <i class="fas fa-link"></i>
+                <input type="text" id="ref-modal-input" class="referral-link-input" readonly value="https://t.me/StarsBazaBot?start=0">
+                <button id="ref-modal-copy" class="copy-mini-btn">Nusxa</button>
+            </div>
+
+            <div class="referral-stats">
+                <div class="ref-stat-box">
+                    <span class="ref-stat-val" id="ref-modal-count">0</span>
+                    <span class="ref-stat-lbl">Takliflar</span>
+                </div>
+                <div class="ref-stat-box">
+                    <span class="ref-stat-val" id="ref-modal-income" style="color: #00e676;">0.00 so'm</span>
+                    <span class="ref-stat-lbl">Daromad</span>
+                </div>
+            </div>
+
+            <button id="ref-modal-share" class="share-main-btn">
+                <i class="fas fa-share-alt"></i> Ulashish
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
