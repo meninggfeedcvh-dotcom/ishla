@@ -71,8 +71,42 @@ if (isPostgres) {
                 key TEXT PRIMARY KEY,
                 value TEXT
             )`);
+            
+            db.run(`CREATE TABLE IF NOT EXISTS services (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                type TEXT,
+                val INTEGER,
+                price INTEGER
+            )`);
+
+            db.get("SELECT COUNT(*) as count FROM services", (err, row) => {
+                if (row && row.count === 0) {
+                    const initial_services = [
+                        ["💎 50 Stars", "stars", 50, 10500],
+                        ["💎 100 Stars", "stars", 100, 21000],
+                        ["💎 200 Stars", "stars", 200, 42000],
+                        ["💎 400 Stars", "stars", 400, 84000],
+                        ["💎 1000 Stars", "stars", 1000, 210000],
+                        ["👑 Premium 3 oy", "premium", 3, 190000],
+                        ["👑 Premium 6 oy", "premium", 6, 350000],
+                        ["👑 Premium 12 oy", "premium", 12, 600000]
+                    ];
+                    initial_services.forEach(s => {
+                        db.run("INSERT INTO services (name, type, val, price) VALUES (?, ?, ?, ?)", s);
+                    });
+                }
+            });
 
             db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('required_channel', '@starsbazachannel')`);
+        });
+        
+        // Ensure columns exist (for existing DBs)
+        const columns = ['total_orders', 'total_stars', 'stars_balance', 'api_token'];
+        columns.forEach(col => {
+            db.run(`ALTER TABLE users ADD COLUMN ${col} INTEGER DEFAULT 0`, (err) => {
+                // Ignore error if column already exists
+            });
         });
     } catch (e) {
         console.error('SQLite initialization failed:', e.message);
@@ -83,21 +117,27 @@ if (isPostgres) {
 const query = {
     get: (sql, params, cb) => {
         if (isPostgres) {
-            db.query(sql.replace(/\?/g, (m, i) => `$${i + 1}`), params, (err, res) => cb(err, res ? res.rows[0] : null));
+            let count = 0;
+            const pgSql = sql.replace(/\?/g, () => `$${++count}`);
+            db.query(pgSql, params, (err, res) => cb(err, res ? res.rows[0] : null));
         } else {
             db.get(sql, params, cb);
         }
     },
     all: (sql, params, cb) => {
         if (isPostgres) {
-            db.query(sql.replace(/\?/g, (m, i) => `$${i + 1}`), params, (err, res) => cb(err, res ? res.rows : []));
+            let count = 0;
+            const pgSql = sql.replace(/\?/g, () => `$${++count}`);
+            db.query(pgSql, params, (err, res) => cb(err, res ? res.rows : []));
         } else {
             db.all(sql, params, cb);
         }
     },
     run: (sql, params, cb) => {
         if (isPostgres) {
-            db.query(sql.replace(/\?/g, (m, i) => `$${i + 1}`), params, (err) => cb(err));
+            let count = 0;
+            const pgSql = sql.replace(/\?/g, () => `$${++count}`);
+            db.query(pgSql, params, (err) => cb(err));
         } else {
             db.run(sql, params, cb);
         }
@@ -240,15 +280,29 @@ app.get('/api/history', (req, res) => {
 });
 
 app.get('/api/top10', (req, res) => {
+    const period = req.query.period || 'all';
+    // For now, sorting by total_stars for all periods, but robust against missing columns
     query.all("SELECT username, total_stars as stars, total_orders as orders FROM users ORDER BY total_stars DESC LIMIT 10", [], (err, rows) => {
-        if (err) return res.json([]);
+        if (err) {
+            console.error("Leaderboard API Error:", err);
+            return res.status(500).json({ error: "Leaderboard error" });
+        }
+        if (!rows) return res.json([]);
+        
         const formatted = rows.map(r => ({
             name: r.username ? `@${r.username}` : 'User',
-            orders: r.orders,
-            stars: r.stars,
+            orders: r.orders || 0,
+            stars: r.stars || 0,
             avatar: r.username ? r.username[0].toUpperCase() : '?'
         }));
         res.json(formatted);
+    });
+});
+
+app.get('/api/services', (req, res) => {
+    query.all("SELECT * FROM services", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json(rows);
     });
 });
 
