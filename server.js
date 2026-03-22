@@ -193,12 +193,12 @@ app.get('/api/user', (req, res) => {
 // --- Bot Feature Endpoints ---
 app.post('/api/withdraw', (req, res) => {
     const { user_id, amount, wallet } = req.body;
-    db.get("SELECT stars_balance FROM users WHERE id = ?", [user_id], (err, row) => {
+    query.get("SELECT stars_balance FROM users WHERE id = ?", [user_id], (err, row) => {
         if (err || !row || row.stars_balance < amount || amount < 50) 
             return res.status(400).json({ error: "Xatolik yoki yetarli emas" });
 
-        db.run("UPDATE users SET stars_balance = stars_balance - ? WHERE id = ?", [amount, user_id], () => {
-            db.run("INSERT INTO withdrawals (user_id, amount, wallet_address) VALUES (?, ?, ?)", [user_id, amount, wallet], () => {
+        query.run("UPDATE users SET stars_balance = stars_balance - ? WHERE id = ?", [amount, user_id], () => {
+            query.run("INSERT INTO withdrawals (user_id, amount, wallet_address) VALUES (?, ?, ?)", [user_id, amount, wallet], () => {
                 res.json({ success: true });
             });
         });
@@ -207,14 +207,16 @@ app.post('/api/withdraw', (req, res) => {
 
 app.post('/api/promo/redeem', (req, res) => {
     const { user_id, code } = req.body;
-    db.get("SELECT * FROM promo_codes WHERE code = ?", [code], (err, promo) => {
+    query.get("SELECT * FROM promo_codes WHERE code = ?", [code], (err, promo) => {
         if (!promo || promo.current_uses >= promo.max_uses) return res.status(400).json({ error: "Promo xato yoki tugagan" });
-        db.get("SELECT * FROM promo_usage WHERE user_id = ? AND promo_id = ?", [user_id, promo.id], (err, used) => {
+        query.get("SELECT * FROM promo_usage WHERE user_id = ? AND promo_id = ?", [user_id, promo.id], (err, used) => {
             if (used) return res.status(400).json({ error: "Avval ishlatilgan" });
-            db.run("UPDATE users SET stars_balance = stars_balance + ? WHERE id = ?", [promo.reward, user_id], () => {
-                db.run("UPDATE promo_codes SET current_uses = current_uses + 1 WHERE id = ?", [promo.id]);
-                db.run("INSERT INTO promo_usage (user_id, promo_id) VALUES (?, ?)", [user_id, promo.id]);
-                res.json({ success: true, reward: promo.reward });
+            query.run("UPDATE users SET stars_balance = stars_balance + ? WHERE id = ?", [promo.reward, user_id], () => {
+                query.run("UPDATE promo_codes SET current_uses = current_uses + 1 WHERE id = ?", [promo.id], () => {
+                    query.run("INSERT INTO promo_usage (user_id, promo_id) VALUES (?, ?)", [user_id, promo.id], () => {
+                        res.json({ success: true, reward: promo.reward });
+                    });
+                });
             });
         });
     });
@@ -224,7 +226,7 @@ app.get('/api/history', (req, res) => {
     const userId = req.query.user_id;
     if (!userId) return res.json([]);
 
-    db.all("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", [userId], (err, rows) => {
+    query.all("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", [userId], (err, rows) => {
         if (err) return res.json([]);
         const formatted = rows.map(r => ({
             title: r.type,
@@ -238,7 +240,7 @@ app.get('/api/history', (req, res) => {
 });
 
 app.get('/api/top10', (req, res) => {
-    db.all("SELECT username, total_stars as stars, total_orders as orders FROM users ORDER BY total_stars DESC LIMIT 10", [], (err, rows) => {
+    query.all("SELECT username, total_stars as stars, total_orders as orders FROM users ORDER BY total_stars DESC LIMIT 10", [], (err, rows) => {
         if (err) return res.json([]);
         const formatted = rows.map(r => ({
             name: r.username ? `@${r.username}` : 'User',
@@ -253,14 +255,14 @@ app.get('/api/top10', (req, res) => {
 app.post('/api/purchase', (req, res) => {
     const { user_id, type, target_user, amount, price } = req.body;
     
-    db.get("SELECT balance FROM users WHERE id = ?", [user_id], (err, row) => {
+    query.get("SELECT balance FROM users WHERE id = ?", [user_id], (err, row) => {
         if (err || !row) return res.status(404).json({ error: "User not found" });
         if (row.balance < price) return res.status(400).json({ error: "Mablag' yetarli emas" });
 
-        db.run("UPDATE users SET balance = balance - ? WHERE id = ?", [price, user_id], function(err) {
+        query.run("UPDATE users SET balance = balance - ? WHERE id = ?", [price, user_id], function(err) {
             if (err) return res.status(500).json({ error: "Transaction failed" });
             
-            db.run(
+            query.run(
                 "INSERT INTO orders (user_id, type, target_user, amount, price) VALUES (?, ?, ?, ?, ?)",
                 [user_id, type, target_user, amount, price],
                 function(err) {
