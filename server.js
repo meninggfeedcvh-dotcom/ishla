@@ -118,13 +118,54 @@ if (isPostgres) {
 if (isPostgres) {
     const setupPostgres = async () => {
         try {
-            await query.run(`CREATE TABLE IF NOT EXISTS services (
-                id SERIAL PRIMARY KEY,
-                name TEXT,
-                type TEXT,
-                val INTEGER,
-                price INTEGER
-            )`, []);
+            // Create all necessary tables
+            const tables = [
+                `CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY,
+                    username TEXT,
+                    name TEXT,
+                    balance INTEGER DEFAULT 0,
+                    stars_balance INTEGER DEFAULT 0,
+                    api_token TEXT,
+                    referred_by TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )`,
+                `CREATE TABLE IF NOT EXISTS orders (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT,
+                    type TEXT,
+                    target_user TEXT,
+                    amount TEXT,
+                    price INTEGER,
+                    status TEXT DEFAULT 'Pending',
+                    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )`,
+                `CREATE TABLE IF NOT EXISTS services (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT,
+                    type TEXT,
+                    val INTEGER,
+                    price INTEGER
+                )`,
+                `CREATE TABLE IF NOT EXISTS promo_codes (
+                    code TEXT PRIMARY KEY,
+                    reward INTEGER,
+                    uses_left INTEGER
+                )`,
+                `CREATE TABLE IF NOT EXISTS promo_usage (
+                    user_id TEXT,
+                    code TEXT,
+                    PRIMARY KEY (user_id, code)
+                )`,
+                `CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )`
+            ];
+
+            for (const tableSql of tables) {
+                await query.run(tableSql, []);
+            }
             
             const row = await new Promise((resolve, reject) => {
                 query.get("SELECT COUNT(*) as count FROM services", [], (err, row) => {
