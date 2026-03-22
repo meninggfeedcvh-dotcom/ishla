@@ -406,9 +406,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (show && leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Yuklanmoqda...</p>';
         try {
             const response = await fetch(`/api/top10?period=${period}`);
-            if (!response.ok) throw new Error('Server error');
-            const data = await response.json();
-            if (!Array.isArray(data)) throw new Error('Invalid data');
+            const text = await response.text();
+            console.log('Top10 raw response:', text);
+            
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error('Top10 JSON parse error:', e, 'Raw:', text);
+                if (show && leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Hozircha ma\'lumot yo\'q</p>';
+                return;
+            }
+
+            if (!Array.isArray(data)) {
+                console.warn('Top10 data is not array:', data);
+                if (show && leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Hozircha ma\'lumot yo\'q</p>';
+                return;
+            }
+
             if (data.length === 0) {
                 if (leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Hozircha ma\'lumot yo\'q</p>';
                 return;
@@ -416,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLeaderboard(data);
         } catch (error) {
             console.error('Leaderboard fetch error:', error);
-            if (show && leaderboardList) leaderboardList.innerHTML = '<p style="color:red; text-align:center;">Xatolik!</p>';
+            if (show && leaderboardList) leaderboardList.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Hozircha ma\'lumot yo\'q</p>';
         }
     }
 
