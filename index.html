@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="uz">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STARS BAZA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Modular Styles -->
     <link rel="stylesheet" href="style-main.css">
     <link rel="stylesheet" href="style-loader.css">
@@ -19,6 +20,7 @@
     <link rel="stylesheet" href="style-toast.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body class="dark-theme">
     <!-- Beautiful Spinner -->
     <div id="app-loader">
@@ -37,7 +39,8 @@
                 <h1 class="logo-text">STARS BAZA</h1>
             </div>
             <div class="header-actions">
-                <button id="theme-toggle" class="action-btn" style="background:none; border:none; color:var(--header-text); font-size:18px;">
+                <button id="theme-toggle" class="action-btn"
+                    style="background:none; border:none; color:var(--header-text); font-size:18px;">
                     <i class="fas fa-moon"></i>
                 </button>
                 <div class="balance-card">
@@ -55,17 +58,26 @@
             <div class="cards-grid">
                 <div class="menu-card stars-card">
                     <div class="card-icon"><i class="fas fa-star" style="color:#ffd700; font-size:32px;"></i></div>
-                    <div class="card-info"><h3>Stars olish</h3><p>Tezkor va sifatli</p></div>
+                    <div class="card-info">
+                        <h3>Stars olish</h3>
+                        <p>Tezkor va sifatli</p>
+                    </div>
                 </div>
                 <div class="menu-card premium-card">
                     <div class="card-icon"><i class="fas fa-crown" style="color:#ff00ff; font-size:32px;"></i></div>
-                    <div class="card-info"><h3>Premium olish</h3><p>Tezkor va ishonchli</p></div>
+                    <div class="card-info">
+                        <h3>Premium olish</h3>
+                        <p>Tezkor va ishonchli</p>
+                    </div>
                 </div>
             </div>
 
             <div class="banner-card offers-banner">
                 <div class="banner-icon"><i class="fas fa-users" style="font-size:24px;"></i></div>
-                <div class="banner-text"><h3>Takliflar</h3><p>Do'stlarni taklif qiling</p></div>
+                <div class="banner-text">
+                    <h3>Takliflar</h3>
+                    <p>Do'stlarni taklif qiling</p>
+                </div>
             </div>
         </main>
 
@@ -90,7 +102,9 @@
     <div id="history-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title"><i class="fas fa-history"></i><h2>Mening tarixim</h2></div>
+                <div class="modal-title"><i class="fas fa-history"></i>
+                    <h2>Mening tarixim</h2>
+                </div>
                 <button class="close-modal" id="close-history"><i class="fas fa-times"></i></button>
             </div>
             <div id="history-list" class="history-list">
@@ -103,7 +117,9 @@
     <div id="top10-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title"><i class="fas fa-trophy"></i><h2>Top 10 foydalanuvchi</h2></div>
+                <div class="modal-title"><i class="fas fa-trophy"></i>
+                    <h2>Top 10 foydalanuvchi</h2>
+                </div>
                 <button class="close-modal" id="close-top10"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-tabs">
@@ -121,7 +137,9 @@
     <div id="profile-modal" class="modal-overlay">
         <div class="modal-content profile-content">
             <div class="modal-header">
-                <div class="modal-title"><i class="fas fa-user"></i><h2>Shaxsiy kabinet</h2></div>
+                <div class="modal-title"><i class="fas fa-user"></i>
+                    <h2>Shaxsiy kabinet</h2>
+                </div>
                 <button class="close-modal" id="close-profile"><i class="fas fa-times"></i></button>
             </div>
             <div class="user-profile-info">
@@ -135,17 +153,25 @@
             <div class="balance-section">
                 <div class="balance-info-row">
                     <div class="wallet-icon-container"><i class="fas fa-wallet"></i></div>
-                    <div><p class="balance-label">Shaxsiy balans</p><p class="balance-value" id="modal-balance">0 so'm</p></div>
+                    <div>
+                        <p class="balance-label">Shaxsiy balans</p>
+                        <p class="balance-value" id="modal-balance">0 so'm</p>
+                    </div>
                     <button class="refill-btn"><i class="fas fa-plus"></i> To'ldirish</button>
                 </div>
             </div>
             <div class="stats-grid">
-                <div class="stat-box"><i class="fas fa-shopping-basket"></i><span class="stat-value" id="stat-orders">0</span><span class="stat-label">Buyurtmalar</span></div>
-                <div class="stat-box"><i class="fas fa-star"></i><span class="stat-value" id="stat-stars">0</span><span class="stat-label">Sotib olingan stars</span></div>
-                <div class="stat-box"><i class="fas fa-users"></i><span class="stat-value" id="stat-referrals">0</span><span class="stat-label">Referallar</span></div>
+                <div class="stat-box"><i class="fas fa-shopping-basket"></i><span class="stat-value"
+                        id="stat-orders">0</span><span class="stat-label">Buyurtmalar</span></div>
+                <div class="stat-box"><i class="fas fa-star"></i><span class="stat-value" id="stat-stars">0</span><span
+                        class="stat-label">Sotib olingan stars</span></div>
+                <div class="stat-box"><i class="fas fa-users"></i><span class="stat-value"
+                        id="stat-referrals">0</span><span class="stat-label">Referallar</span></div>
             </div>
             <div class="api-panel">
-                <div class="api-header"><i class="fas fa-code"></i><h3>API Panel</h3></div>
+                <div class="api-header"><i class="fas fa-code"></i>
+                    <h3>API Panel</h3>
+                </div>
                 <p class="api-description">API - faqat dasturchilar uchun. Avtomatik buyurtmalar yaratish mumkin.</p>
                 <div class="api-input-group">
                     <input type="password" id="api-token" readonly>
@@ -162,7 +188,9 @@
     <div id="stars-modal" class="modal-overlay purchase-modal">
         <div class="modal-content">
             <div class="purchase-header">
-                <div class="modal-title"><i class="fas fa-star" style="color:#ffd700"></i><h2>Stars olish</h2></div>
+                <div class="modal-title"><i class="fas fa-star" style="color:#ffd700"></i>
+                    <h2>Stars olish</h2>
+                </div>
                 <button class="close-modal" id="close-stars"><i class="fas fa-times"></i></button>
             </div>
             <div class="purchase-body">
@@ -180,8 +208,10 @@
                 </div>
                 <p style="font-size:12px; color:#888; margin-bottom:10px;">To'lov usulini tanlang:</p>
                 <div class="payment-methods">
-                    <button class="method-btn active" data-method="card"><i class="fas fa-credit-card"></i> Bank kartasi</button>
-                    <button class="method-btn" data-method="balance"><i class="fas fa-wallet"></i> Shaxsiy balans</button>
+                    <button class="method-btn active" data-method="card"><i class="fas fa-credit-card"></i> Bank
+                        kartasi</button>
+                    <button class="method-btn" data-method="balance"><i class="fas fa-wallet"></i> Shaxsiy
+                        balans</button>
                 </div>
                 <div class="total-display" id="stars-display-container">
                     <i class="fas fa-calculator"></i> Jami: <span id="stars-total">10 500</span> so'm
@@ -195,7 +225,9 @@
     <div id="premium-modal" class="modal-overlay purchase-modal">
         <div class="modal-content">
             <div class="purchase-header">
-                <div class="modal-title"><i class="fas fa-crown" style="color:#ff00ff"></i><h2>Premium olish</h2></div>
+                <div class="modal-title"><i class="fas fa-crown" style="color:#ff00ff"></i>
+                    <h2>Premium olish</h2>
+                </div>
                 <button class="close-modal" id="close-premium"><i class="fas fa-times"></i></button>
             </div>
             <div class="purchase-body">
@@ -210,8 +242,10 @@
                 </div>
                 <p style="font-size:12px; color:#888; margin-bottom:10px; margin-top:20px;">To'lov usulini tanlang:</p>
                 <div class="payment-methods">
-                    <button class="method-btn active" data-method="card"><i class="fas fa-credit-card"></i> Bank kartasi</button>
-                    <button class="method-btn" data-method="balance"><i class="fas fa-wallet"></i> Shaxsiy balans</button>
+                    <button class="method-btn active" data-method="card"><i class="fas fa-credit-card"></i> Bank
+                        kartasi</button>
+                    <button class="method-btn" data-method="balance"><i class="fas fa-wallet"></i> Shaxsiy
+                        balans</button>
                 </div>
                 <div class="total-display" id="premium-display-container">
                     <i class="fas fa-calculator"></i> Jami: <span id="premium-total">190 000</span> so'm
@@ -225,14 +259,16 @@
     <div id="referral-modal" class="modal-overlay">
         <div class="modal-content referral-content">
             <div class="modal-header" style="margin-bottom: 10px;">
-                <button class="close-modal" id="close-referral" style="background: rgba(255, 255, 255, 0.1); color: white;"><i class="fas fa-times"></i></button>
+                <button class="close-modal" id="close-referral"
+                    style="background: rgba(255, 255, 255, 0.1); color: white;"><i class="fas fa-times"></i></button>
             </div>
-            
+
             <p class="referral-label">Sizning referal havola:</p>
-            
+
             <div class="referral-link-container">
                 <i class="fas fa-link"></i>
-                <input type="text" id="ref-modal-input" class="referral-link-input" readonly value="https://t.me/StarsBazaBot?start=0">
+                <input type="text" id="ref-modal-input" class="referral-link-input" readonly
+                    value="https://t.me/StarsBazaBot?start=0">
                 <button id="ref-modal-copy" class="copy-mini-btn">Nusxa</button>
             </div>
 
@@ -260,28 +296,37 @@
     <div id="payment-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title"><i class="fas fa-credit-card"></i><h2>Hisobni to'ldirish</h2></div>
+                <div class="modal-title"><i class="fas fa-credit-card"></i>
+                    <h2>Hisobni to'ldirish</h2>
+                </div>
                 <button class="close-modal" id="close-payment"><i class="fas fa-times"></i></button>
             </div>
             <div class="payment-body" style="padding: 20px; text-align: center;">
-                <p style="color: #888; margin-bottom: 20px; font-size: 14px;">Quyidagi kartaga to'lov qiling va chekni adminga yuboring:</p>
-                
-                <div class="premium-card-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; color: white; text-align: left; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); margin-bottom: 20px;">
+                <p style="color: #888; margin-bottom: 20px; font-size: 14px;">Quyidagi kartaga to'lov qiling va chekni
+                    adminga yuboring:</p>
+
+                <div class="premium-card-box"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; color: white; text-align: left; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); margin-bottom: 20px;">
                     <div style="font-size: 12px; opacity: 0.8; margin-bottom: 5px;">Karta raqami</div>
-                    <div id="display-card-number" style="font-size: 20px; font-weight: bold; letter-spacing: 2px;">6262 5702 0537 1009</div>
-                    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div id="display-card-number" style="font-size: 20px; font-weight: bold; letter-spacing: 2px;">6262
+                        5702 0537 1009</div>
+                    <div
+                        style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
                         <span style="font-size: 14px; font-weight: 500;">HUMO</span>
-                        <img src="https://humocard.uz/bitrix/templates/main/img/humo-logo.svg" style="height: 20px; filter: brightness(0) invert(1);">
+                        <img src="https://humocard.uz/bitrix/templates/main/img/humo-logo.svg"
+                            style="height: 20px; filter: brightness(0) invert(1);">
                     </div>
                 </div>
 
-                <button class="pay-btn" id="copy-card-btn" style="background: #333; margin-bottom: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <button class="pay-btn" id="copy-card-btn"
+                    style="background: #333; margin-bottom: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <i class="fas fa-copy"></i> Kartani nusxalash
                 </button>
 
                 <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 10px;">
                     <p style="font-size: 13px; margin-bottom: 10px; color: #666;">To'lovdan so'ng:</p>
-                    <a href="https://t.me/devc0derweb" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #0088cc; text-decoration: none; font-weight: bold; font-size: 16px;">
+                    <a href="https://t.me/devc0derweb" target="_blank"
+                        style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #0088cc; text-decoration: none; font-weight: bold; font-size: 16px;">
                         <i class="fab fa-telegram-plane"></i> @devc0derweb
                     </a>
                 </div>
@@ -291,4 +336,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
