@@ -36,7 +36,7 @@ class AdminStates(StatesGroup):
     waiting_for_broadcast_text = State()
     waiting_for_balance_user_id = State()
     waiting_for_balance_amount = State()
-    waiting_for_user_info_id = State()
+    waiting_for_user_info_id = State() 
     # Promo Creation
     waiting_for_promo_code = State()
     waiting_for_promo_reward = State()
