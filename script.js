@@ -18,24 +18,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Data Storage ---
     let userData = null;
+    let services = [];
+    let starsPrice = 210;
     const premiumPrices = { '3': 190000, '6': 350000, '12': 600000 };
 
     // --- Initialization ---
     const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user_id');
+    let userId = urlParams.get('user_id');
+
+    // --- Telegram WebApp Integration ---
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.expand();
+        const tgUser = tg.initDataUnsafe?.user;
+        if (tgUser) {
+            userId = tgUser.id.toString();
+            // Update UI with real Telegram Data
+            const nameEl = document.getElementById('profile-name');
+            const userEl = document.getElementById('profile-username');
+            const idEl = document.getElementById('profile-id');
+            const avatarEl = document.getElementById('profile-avatar-letter');
+
+            if (nameEl) nameEl.textContent = `${tgUser.first_name} ${tgUser.last_name || ''}`.trim();
+            if (userEl) userEl.textContent = tgUser.username ? `@${tgUser.username}` : 'No Username';
+            if (idEl) idEl.textContent = `ID: ${tgUser.id}`;
+            
+            if (tgUser.photo_url && avatarEl) {
+                avatarEl.innerHTML = `<img src="${tgUser.photo_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                avatarEl.style.background = 'none';
+            } else if (avatarEl) {
+                avatarEl.textContent = tgUser.first_name.charAt(0).toUpperCase();
+            }
+        }
+    }
 
     async function init() {
-        // showLoader(); // Disabled as per user request
-        await Promise.all([
-            fetchUserData(),
-            fetchLeaderboard('weekly', false) 
-        ]);
-        setTimeout(hideLoader, 500);
+        showLoader();
+        // Start all fetches in parallel
+        const servicesTask = fetchServices();
+        const userDataTask = fetchUserData();
+        const leaderboardTask = fetchLeaderboard('weekly', false);
 
-        // Handle Deep Linking
+        await Promise.all([servicesTask, userDataTask, leaderboardTask]);
+        
+        // Finalize UI then hide loader after 3 seconds (as requested for 'feel')
+        setTimeout(() => {
+            hideLoader();
+        }, 3000);
+        
+        // Handle deep links from bot
         const tab = urlParams.get('tab');
-        if (tab === 'history') openModal('history');
-        if (tab === 'deposit') openModal('profile');
+        const val = urlParams.get('val');
+        if (tab === 'stars') {
+            openModal('stars');
+            if (val) {
+                starsAmount.value = val;
+                calculateStars();
+            }
+        } else if (tab === 'premium') {
+            openModal('premium');
+            if (val) {
+                setTimeout(() => {
+                    document.querySelector(`#premium-duration .amount-btn[data-val="${val}"]`)?.click();
+                }, 200);
+            }
+        }
+    }
+
+    async function fetchServices() {
+        try {
+            const res = await fetch('/api/services');
+            services = await res.json();
+            renderServices();
+        } catch (e) {
+            console.error("Services fetch error:", e);
+        }
+    }
+
+    function renderServices() {
+        const starsQuick = document.getElementById('stars-quick');
+        const premiumDuration = document.getElementById('premium-duration');
+        if (!starsQuick || !premiumDuration) return;
+
+        starsQuick.innerHTML = '';
+        premiumDuration.innerHTML = '';
+
+        const starServices = services.filter(s => s.type === 'stars');
+        const premiumServices = services.filter(s => s.type === 'premium');
+
+        if (starServices.length > 0) starsPrice = starServices[0].price / starServices[0].val;
+
+        starServices.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'amount-btn';
+            btn.dataset.val = s.val;
+            btn.innerText = s.val;
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#stars-quick .amount-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                starsAmount.value = s.val;
+                calculateStars();
+            });
+            starsQuick.appendChild(btn);
+        });
+
+        premiumServices.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'amount-btn';
+            btn.dataset.val = s.val;
+            btn.innerText = `${s.val} oy`;
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#premium-duration .amount-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                calculatePremium();
+            });
+            premiumDuration.appendChild(btn);
+            premiumPrices[s.val] = s.price;
+        });
+
+        // Set initial actives
+        document.querySelector('#stars-quick .amount-btn')?.classList.add('active');
+        document.querySelector('#premium-duration .amount-btn')?.classList.add('active');
     }
 
     function showLoader() { if (loader) loader.classList.remove('hidden'); }
@@ -113,7 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
         profile: document.getElementById('profile-modal'),
         stars: document.getElementById('stars-modal'),
         premium: document.getElementById('premium-modal'),
-        referral: document.getElementById('referral-modal')
+        referral: document.getElementById('referral-modal'),
+        payment: document.getElementById('payment-modal')
     };
 
     const navBtns = {
@@ -133,7 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
         profile: document.getElementById('close-profile'),
         stars: document.getElementById('close-stars'),
         premium: document.getElementById('close-premium'),
-        referral: document.getElementById('close-referral')
+        referral: document.getElementById('close-referral'),
+        payment: document.getElementById('close-payment')
     };
 
     function openModal(key) {
@@ -296,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const starsText = new Intl.NumberFormat('uz-UZ').format(user.stars);
             div.innerHTML = `
                 <div class="rank-avatar">${rank}</div>
-                <div class="user-info"><h4>${user.username}</h4><p>${user.orders} ta buyurtma</p></div>
+                <div class="user-info"><h4>${user.name}</h4><p>${user.orders} ta buyurtma</p></div>
                 <div class="stars-info"><span class="stars-count">${starsText} ta</span><span class="stars-label">stars</span></div>
             `;
             leaderboardList.appendChild(div);
@@ -315,7 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateStars() {
         if (!starsAmount || !starsDisplayContainer) return 0;
         const amount = parseInt(starsAmount.value) || 0;
-        const price = amount * 210;
+        
+        // Find matching package for exact price, or use base price
+        const pkg = services.find(s => s.type === 'stars' && s.val == amount);
+        const price = pkg ? pkg.price : (amount * starsPrice);
+
         const methodBtn = document.querySelector('#stars-modal .method-btn.active');
         const method = methodBtn ? methodBtn.dataset.method : 'card';
         
@@ -403,7 +512,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const amountLabel = isStars ? starsAmount.value + ' stars' : document.querySelector('#premium-duration .amount-btn.active').textContent;
-            const priceVal = isStars ? (parseInt(starsAmount.value) * 210) : premiumPrices[document.querySelector('#premium-duration .amount-btn.active').dataset.val];
+            const activeStarBtn = document.querySelector('#stars-quick .amount-btn.active');
+            const activePremBtn = document.querySelector('#premium-duration .amount-btn.active');
+            
+            let priceVal;
+            if (isStars) {
+                const pkg = services.find(s => s.type === 'stars' && s.val == starsAmount.value);
+                priceVal = pkg ? pkg.price : (parseInt(starsAmount.value) * starsPrice);
+            } else {
+                priceVal = premiumPrices[activePremBtn.dataset.val];
+            }
 
             const payload = {
                 user_id: userId,
@@ -469,22 +587,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function handleWithdraw(amount, wallet) {
-        // Haptic Feedback
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        // ... (existing code)
+    }
+
+    // --- Global Event Delegation (Robust) ---
+    document.body.addEventListener('click', (e) => {
+        const refillBtn = e.target.closest('.refill-btn');
+        if (refillBtn) {
+            e.preventDefault();
+            openModal('payment');
         }
 
-        try {
-            const res = await fetch('/api/withdraw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, amount, wallet })
-            });
-            const data = await res.json();
-            if (data.success) { showToast('Sorov yuborildi! ✅'); fetchUserData(); }
-            else { showToast(data.error, 'error'); }
-        } catch (e) { showToast('Xatolik!', 'error'); }
-    }
+        const copyCardBtn = e.target.closest('#copy-card-btn');
+        if (copyCardBtn) {
+            const card = "6262 5702 0537 1009";
+            navigator.clipboard.writeText(card.replace(/\s/g, ''));
+            showToast('Karta raqami nusxalandi! ✅');
+        }
+    });
 
     // Start everything
     init();
