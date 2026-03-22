@@ -186,7 +186,6 @@ app.use(express.static(path.join(__dirname, '/')));
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server is listening on port ${port} and address 0.0.0.0`);
-    console.log(`Platform detected: ${process.platform}`);
 });
 
 // --- Graceful Shutdown ---
