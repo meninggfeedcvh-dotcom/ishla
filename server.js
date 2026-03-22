@@ -1,9 +1,46 @@
-const express = require('express');
-const path = require('path');
-const app = express();
 const port = process.env.PORT || 3000;
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('database.db');
+const { Pool } = require('pg');
+
+// --- Database Connection Config ---
+let db;
+const isPostgres = process.env.DATABASE_URL !== undefined;
+
+if (isPostgres) {
+    db = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+    console.log('Connected to PostgreSQL database');
+} else {
+    db = new sqlite3.Database('database.db');
+    console.log('Connected to SQLite database');
+}
+
+// Wrapper to match SQLite/Postgres query styles
+const query = {
+    get: (sql, params, cb) => {
+        if (isPostgres) {
+            db.query(sql.replace(/\?/g, (m, i) => `$${i + 1}`), params, (err, res) => cb(err, res ? res.rows[0] : null));
+        } else {
+            db.get(sql, params, cb);
+        }
+    },
+    all: (sql, params, cb) => {
+        if (isPostgres) {
+            db.query(sql.replace(/\?/g, (m, i) => `$${i + 1}`), params, (err, res) => cb(err, res ? res.rows : []));
+        } else {
+            db.all(sql, params, cb);
+        }
+    },
+    run: (sql, params, cb) => {
+        if (isPostgres) {
+            db.query(sql.replace(/\?/g, (m, i) => `$${i + 1}`), params, (err) => cb(err));
+        } else {
+            db.run(sql, params, cb);
+        }
+    }
+};
 
 // --- Global Error Handling ---
 process.on('uncaughtException', (err) => {
@@ -57,7 +94,7 @@ app.get('/api/user', (req, res) => {
         });
     }
 
-    db.get(`
+    query.get(`
         SELECT u.*, 
         (SELECT COUNT(*) FROM users WHERE referred_by = u.id) as ref_count
         FROM users u WHERE u.id = ?
@@ -150,38 +187,6 @@ app.use(express.static(path.join(__dirname, '/')));
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server is listening on port ${port} and address 0.0.0.0`);
     console.log(`Platform detected: ${process.platform}`);
-    
-    // Start Python Bot
-    console.log("Starting Python Bot...");
-    
-    let botCommand = 'python3';
-    if (process.platform === 'win32') {
-        botCommand = 'python';
-    }
-
-    const startBot = (cmd) => {
-        console.log(`Attempting to start bot with command: ${cmd}`);
-        const bot = spawn(cmd, ['main.py'], {
-            stdio: 'inherit',
-            env: { ...process.env, PYTHONUNBUFFERED: '1' }
-        });
-
-        bot.on('error', (err) => {
-            console.error(`Failed to start bot with ${cmd}:`, err.message);
-            if (cmd === 'python3' && process.platform !== 'win32') {
-                console.log("Retrying with 'python' command...");
-                startBot('python');
-            }
-        });
-
-        bot.on('close', (code) => {
-            if (code !== 0 && code !== null) {
-                console.error(`Bot process exited with code ${code}`);
-            }
-        });
-    };
-
-    startBot(botCommand);
 });
 
 // --- Graceful Shutdown ---
