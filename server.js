@@ -12,7 +12,8 @@ const isPostgres = process.env.DATABASE_URL !== undefined;
 if (isPostgres) {
     db = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 5000
     });
     console.log('Connected to PostgreSQL database');
 } else {
