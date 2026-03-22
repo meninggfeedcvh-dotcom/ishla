@@ -1,5 +1,7 @@
+const express = require('express');
+const path = require('path');
+const app = express();
 const port = process.env.PORT || 3000;
-const sqlite3 = require('sqlite3').verbose();
 const { Pool } = require('pg');
 
 // --- Database Connection Config ---
@@ -13,8 +15,13 @@ if (isPostgres) {
     });
     console.log('Connected to PostgreSQL database');
 } else {
-    db = new sqlite3.Database('database.db');
-    console.log('Connected to SQLite database');
+    try {
+        const sqlite3 = require('sqlite3').verbose();
+        db = new sqlite3.Database('database.db');
+        console.log('Connected to SQLite database');
+    } catch (e) {
+        console.error('SQLite initialization failed:', e.message);
+    }
 }
 
 // Wrapper to match SQLite/Postgres query styles
