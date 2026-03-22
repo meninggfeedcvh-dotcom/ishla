@@ -66,10 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await Promise.all([servicesTask, userDataTask, leaderboardTask]);
         
-        // Finalize UI then hide loader after 3 seconds (as requested for 'feel')
-        setTimeout(() => {
-            hideLoader();
-        }, 3000);
+        // Finalize UI then hide loader immediately
+        hideLoader();
+        
+        // Start background auto-refresh every 7 seconds
+        setInterval(() => {
+            if (userId) fetchUserData(true);
+        }, 7000);
         
         // Handle deep links from bot
         const tab = urlParams.get('tab');
